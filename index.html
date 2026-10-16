@@ -1,193 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Odisha Coastal Inundation & Evacuation Simulator</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GeoAI flood and evacuation simulator: Odisha</title>
 <style>
-:root{color-scheme:dark;--bg:#0b1320;--panel:#1b2230;--panel2:#252d3d;--line:rgba(255,255,255,.1);--text:#f1f5f9;--mute:#94a3b8;--red:#ff5a4f;--amber:#fbbc04;--green:#34a853;--blue:#3b6cf0;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{--text-primary:#f1f5f9;--text-secondary:#94a3b8;--surface-1:#1e293b;--border:rgba(255,255,255,.14);--text-danger:#f87171;--text-success:#4ade80;--text-warning:#fbbf24;--radius:8px}
 *{box-sizing:border-box}
-body{margin:0;background:#05080f;color:var(--text);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center;padding:16px}
-.card{width:100%;max-width:720px;background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.5)}
-.map{position:relative;aspect-ratio:653/359.15;background:var(--bg);container-type:inline-size}
-.map svg{position:absolute;inset:0;width:100%;height:100%}
-.hdr{position:absolute;left:3%;top:4%;background:rgba(0,0,0,.65);border:1px solid var(--line);border-radius:6px;padding:6px 10px;z-index:3}
-.hdr b{display:block;color:var(--amber);font-size:clamp(8px,1.9cqw,11px);letter-spacing:.04em}
-.hdr span{font-size:clamp(9px,2cqw,12px)}
-.pause{position:absolute;right:3%;top:4%;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:var(--text);cursor:pointer;z-index:3;font-size:13px}
-.pause:hover{background:rgba(255,255,255,.2)}
-button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #7aa2ff;outline-offset:2px}
-.lbl{position:absolute;transform:translate(-50%,0);white-space:nowrap;text-align:center;border-radius:6px;padding:2px 6px;font-size:clamp(7px,1.75cqw,11px);line-height:1.25;z-index:2;pointer-events:none}
-.vil{background:rgba(5,8,15,.88);border:1px solid var(--line);margin-top:8px}
-.vil b{display:block;font-weight:600}
-.vil i{font-style:normal;font-weight:600}
-.vil.dry i{color:#2ecc71}.vil.mid i{color:#fbbf24}.vil.hi i{color:var(--red)}
-.mcs{background:rgba(23,37,84,.92);border:1px solid rgba(96,165,250,.4);transform:translate(-50%,-135%);color:#dbeafe;font-weight:600}
-.mcs svg{width:9px;height:9px;vertical-align:-1px;margin-right:4px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 20px;background:#141a26;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center}
-.stats small{display:block;color:var(--mute);font-size:10px;letter-spacing:.03em;text-transform:uppercase}
-.stats strong{display:block;font-size:clamp(18px,5vw,26px);margin-top:2px;font-variant-numeric:tabular-nums;transition:color .3s}
-.ctl{padding:18px 20px 22px}
-.ctl>small{display:block;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
-select{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:15px;margin-bottom:18px}
-select:hover{border-color:#60a5fa}
-.sl{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.sl label{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-bottom:8px;gap:6px}
-.sl output{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,var(--blue) var(--p,0%),#3a4357 var(--p,0%));margin:0}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue);border:0;cursor:pointer;box-shadow:0 0 8px rgba(59,108,240,.6)}
-input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--blue);border:0;cursor:pointer}
-@media(max-width:560px){.sl{grid-template-columns:1fr;gap:14px}}
-@keyframes pulse{0%,100%{transform:scale(.9);opacity:1}50%{transform:scale(1.3);opacity:.4}}
-.pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2s infinite}
-.paused .pulse{animation-play-state:paused}
-@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+html,body{margin:0;height:100%;background:#0f172a;color:#f1f5f9;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+.deck{position:relative;height:100%}
+.slide{position:absolute;inset:0;display:none;padding:40px 56px 76px;overflow-y:auto}
+.slide.on{display:block}
+.slide h1{font-size:44px;font-weight:500;margin:0 0 16px;line-height:1.15}
+.slide h2{font-size:28px;font-weight:500;margin:0 0 4px}
+.slide p.lead{font-size:20px;color:#94a3b8;margin:0;max-width:760px;line-height:1.5}
+.kicker{font-size:14px;color:#fbbf24;margin:0 0 14px}
+.center{display:flex;flex-direction:column;justify-content:center;min-height:100%}
+.sub{font-size:14px;color:#94a3b8;margin:0 0 16px}
+.simwrap{max-width:780px;margin:0 auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:28px}
+.card{background:#1e293b;border:0.5px solid rgba(255,255,255,.14);border-radius:12px;padding:20px}
+.card h3{font-size:18px;font-weight:500;margin:0 0 8px}
+.card p{margin:0;font-size:15px;line-height:1.55;color:#cbd5e1}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+.nav{position:absolute;left:0;right:0;bottom:0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:#0f172a;border-top:0.5px solid rgba(255,255,255,.14)}
+.nav button{background:transparent;color:#f1f5f9;border:0.5px solid #475569;border-radius:8px;padding:8px 16px;font:inherit;font-size:14px;cursor:pointer}
+.nav button:hover{background:#1e293b}
+.nav span{font-size:13px;color:#94a3b8}
 </style>
 </head>
 <body>
-<main class="card" id="app">
-  <div class="map" id="map">
-    <div class="hdr"><b id="t1"></b><span id="t2"></span></div>
-    <button class="pause" id="pause" aria-label="Pause animation">❚❚</button>
-    <svg viewBox="0 0 653 359.15" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <radialGradient id="surgeG" cx="70%" cy="80%" r="75%">
-          <stop offset="0" stop-color="#1d4ed8" stop-opacity=".5"/>
-          <stop offset=".5" stop-color="#2563eb" stop-opacity=".3"/>
-          <stop offset="1" stop-color="#0b1320" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="warn" cx="50%" cy="50%" r="50%">
-          <stop offset="0" stop-color="#fbbc04" stop-opacity=".4"/>
-          <stop offset="1" stop-color="#fbbc04" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="danger" cx="50%" cy="50%" r="50%">
-          <stop offset="0" stop-color="#ea4335" stop-opacity=".55"/>
-          <stop offset="1" stop-color="#ea4335" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-      <rect width="653" height="359.15" fill="#0b1320"/>
-      <g id="grid" stroke="#fff" stroke-width=".5" opacity=".07"></g>
-      <rect id="surgeRect" width="653" height="359.15" fill="url(#surgeG)" opacity="0"/>
-      <path id="wall" d="M 0,161.6175 Q 261.2,197.5325 457.09,143.66 T 653,215.49" fill="none" stroke-width="3.5" stroke-linecap="round"/>
-      <text x="14" y="130" fill="#7c8aa3" font-size="9">Coastal Embankment Wall</text>
-      <g id="pulses"></g><g id="routes"></g><g id="nodes"></g>
-    </svg>
-    <div id="labels"></div>
-  </div>
-  <div class="stats">
-    <div><small>High-risk villages</small><strong id="risk" style="color:var(--red)"></strong></div>
-    <div><small>Est. displaced pop.</small><strong id="pop"></strong></div>
-    <div><small>Embankment status</small><strong id="emb"></strong></div>
-  </div>
-  <div class="ctl">
-    <small>Odisha high-risk target area</small>
-    <select id="region" aria-label="Target area"></select>
-    <div class="sl">
-      <div><label for="surge">Storm surge height <output id="oS"></output></label><input id="surge" type="range" min="0" max="6" step="0.1" value="0"></div>
-      <div><label for="rain">Rainfall intensity <output id="oR"></output></label><input id="rain" type="range" min="0" max="200" step="1" value="0"></div>
-      <div><label for="dyke">Embankment strength <output id="oE"></output></label><input id="dyke" type="range" min="0" max="100" step="1" value="100"></div>
-    </div>
-  </div>
-</main>
+<div class="deck">
+
+<section class="slide on">
+<div class="center">
+<p class="kicker">GeoAI decision support</p>
+<h1>Predicting coastal floods and planning evacuations in Odisha</h1>
+<p class="lead">An interactive model showing how storm surge, rainfall and embankment strength combine to put villages at risk during a cyclone landfall.</p>
+</div>
+</section>
+
+<section class="slide">
+<h2>Live simulator</h2>
+<p class="sub">Change the district and move the sliders to see flood depth, displaced population and evacuation routes update.</p>
+<div class="simwrap">
+
+<style>
+.sim .mapw{position:relative;border-radius:12px 12px 0 0;overflow:hidden;background:#0a1633}
+.sim .mapw svg{display:block;width:100%;height:auto}
+.sim #pz{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;background:rgba(15,23,42,.85);border:0.5px solid #334155;color:#f1f5f9;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.sim .strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surface-1);border-top:0.5px solid var(--border);padding:14px 8px}
+.sim .strip div{text-align:center;border-right:0.5px solid var(--border);padding:0 6px}
+.sim .strip div:last-child{border-right:none}
+.sim .strip span{display:block;font-size:12px;color:var(--text-secondary);margin-bottom:2px}
+.sim .strip b{font-size:22px;font-weight:500}
+.sim .ctl{background:var(--surface-1);border-top:0.5px solid var(--border);border-radius:0 0 12px 12px;padding:16px}
+.sim .ctl label.h{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:6px}
+.sim .ctl select{width:100%;padding:8px 10px;border-radius:var(--radius);border:0.5px solid var(--border);background:rgba(128,128,128,.12);color:var(--text-primary);font:inherit;font-size:14px}
+.sim .sl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:18px;margin-top:16px}
+.sim .sl .t{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-secondary);margin-bottom:8px}
+.sim .sl .t span i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
+.sim .sl .t b{font-weight:500;font-size:13px;padding:2px 8px;border-radius:var(--radius)}
+.sim .sl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:4px;outline:none;cursor:pointer;margin:0}
+.sim .sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 0 0 1px var(--c)}
+.sim .sl input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 0 0 1px var(--c)}
+.sim .sl input[type=range]::-moz-range-track{background:transparent}
+</style>
+<div class="sim">
+<div class="mapw">
+<svg id="map" viewBox="0 0 680 380" role="img" aria-label="Flood and evacuation map"></svg>
+<button id="pz" aria-label="Pause animation"><svg id="pzi" width="18" height="18" viewBox="0 0 24 24" fill="#f1f5f9"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+</div>
+<div class="strip">
+<div><span>High-risk villages</span><b id="k1" style="color:var(--text-danger)">0 / 0</b></div>
+<div><span>Est. displaced population</span><b id="k2">0</b></div>
+<div><span>Embankment status</span><b id="k3">Stable</b></div>
+</div>
+<div class="ctl">
+<label class="h" for="reg">Target area</label>
+<select id="reg"><option value="jag">Jagatsinghpur coastal zone</option><option value="ken">Kendrapara (Bhitarkanika sector)</option><option value="pur">Puri coastal corridor</option></select>
+<div class="sl">
+<div><div class="t"><span><i style="background:#378ADD"></i>Storm surge height</span><b id="sv" style="background:rgba(55,138,221,.18);color:#378ADD">3.5 m</b></div><input type="range" id="s" min="0" max="6" step="0.1" value="3.5" data-c="#378ADD" style="--c:#378ADD"></div>
+<div><div class="t"><span><i style="background:#7F77DD"></i>Rainfall intensity</span><b id="rv" style="background:rgba(127,119,221,.18);color:#7F77DD">60 mm/hr</b></div><input type="range" id="r" min="0" max="100" step="5" value="60" data-c="#7F77DD" style="--c:#7F77DD"></div>
+<div><div class="t"><span><i style="background:#22a05a"></i>Embankment strength</span><b id="ev" style="background:rgba(34,160,90,.18);color:#22a05a">75%</b></div><input type="range" id="e" min="10" max="100" step="5" value="75" data-c="#22a05a" style="--c:#22a05a"></div>
+</div>
+</div>
+</div>
 <script>
-// Village: [name, x, y, population, elevation m, surge exposure k] ; shelter: [name, x, y]
-const REGIONS = {
-  ken:{name:"Kendrapara Wetland & Coast",t1:"MAHANADI DELTA MODEL",t2:"Mouth of Bay of Bengal",focus:[70,80],
-    shelters:[["Rajnagar MCS",228.5,81],["Mahakalapada MCS",457.1,127.7]],
-    villages:[["Bhitarkanika Edge",97.9,197.5,1250,.6,.66],["Pattamundai Basin",195.9,150.8,900,2,.5],["Garahpur Village",404.8,233.4,1800,1.3,.78],["Satabhaya Coastal",313.4,305.2,2100,.3,1.02],["Jamboo Settlement",535.4,280.1,1300,.7,.935]]},
-  jag:{name:"Jagatsinghpur Mahanadi Delta",t1:"MAHANADI DELTA CORRIDOR",t2:"Paradip to Erasama",focus:[50,90],
-    shelters:[["Paradip Port MCS",350,90],["Erasama Core MCS",210,160]],
-    villages:[["Siali Coastline",120,240,1650,.6,.9],["Padmapur Lowlands",280,270,2400,.3,1.05],["Kujang Buffer Slopes",420,180,1100,1.6,.55],["Balikuda Sector",490,290,3200,.8,.95],["Naugaon Delta Ring",580,220,1450,1.2,.8]]},
-  pur:{name:"Puri Coastal Sector",t1:"PURI COASTAL SECTOR",t2:"Chilika to Konark",focus:[30,85],
-    shelters:[["Puri Head MCS",180,120],["Astaranga MCS",400,100],["Konark Buffer MCS",480,190]],
-    villages:[["Chilika Wetland Fringe",80,210,1950,.7,.75],["Satyabadi Depressions",260,230,2800,.5,.95],["Konark Marine Fringe",340,290,1500,1,1.05],["Gop Estuary Block",550,260,2100,1.4,.85],["Kanas Low-lying Grid",610,140,1200,1.8,.5]]}
+(function(){
+var R={
+jag:{t:"Mahanadi delta model",s:"Mouth of Bay of Bengal",w:[200,14,90,1],
+sh:[["Erasama MCS",130,120],["Paradip Port MCS",520,105]],
+vl:[["Kujang Village",120,285,1900,.9],["Padmapur Hamlet",270,320,2200,1.3],["Balitutha Basti",360,192,950,.35],["Gadaharishpur",470,265,1700,1.05],["Siali Beach Area",575,335,2200,1.5]]},
+ken:{t:"Bhitarkanika sector model",s:"Baunsagadia and Hukitola coast",w:[205,12,70,.5],
+sh:[["Rajnagar Central MCS",190,110],["Mahakalapada MCS",480,105]],
+vl:[["Bhitarkanika Buffer",110,280,850,1.2],["Garahpur",260,310,1900,1.0],["Pattamundai Plain",390,200,3100,.4],["Rajkanika Sector",500,280,1500,1.1],["Aul Lowlands",575,335,1700,1.45]]},
+pur:{t:"Puri coastal corridor model",s:"Chilika to Konark shoreline",w:[195,16,110,2],
+sh:[["Kanas Safe Zone",110,125],["Puri Town MCS",330,115],["Astaranga Coast MCS",540,110]],
+vl:[["Chilika Fringe",150,300,2100,1.25],["Satyabadi Low-basin",300,325,3400,1.35],["Gop Region",400,200,2600,.45],["Konark Marine Drive",470,268,1750,1.0],["Nimapara Flats",580,335,1600,1.5]]}
 };
-let off = 0;
-const $ = id => document.getElementById(id);
-const W = 653, H = 359.15, fmt = n => Math.round(n).toLocaleString("en-IN");
-const sel = $("region");
-for (const k in REGIONS) sel.add(new Option(REGIONS[k].name, k));
-
-let grid = "";
-for (let i = 1; i < 7; i++) grid += `<line x1="0" x2="${W}" y1="${i*H/7}" y2="${i*H/7}"/>`;
-for (let i = 1; i < 11; i++) grid += `<line y1="0" y2="${H}" x1="${i*W/11}" x2="${i*W/11}"/>`;
-$("grid").innerHTML = grid;
-
-function render() {
-  const r = REGIONS[sel.value];
-  const surge = +$("surge").value, rain = +$("rain").value, dyke = +$("dyke").value;
-  $("oS").textContent = surge.toFixed(1) + " m";
-  $("oR").textContent = rain + " mm/hr";
-  $("oE").textContent = dyke + "%";
-  $("t1").textContent = r.t1; $("t2").textContent = r.t2;
-
-  const sr = $("surgeRect");
-  sr.setAttribute("opacity", Math.min(0.95, surge * 0.12 + rain * 0.004));
-  $("surgeG").setAttribute("cx", r.focus[0] + "%"); $("surgeG").setAttribute("cy", r.focus[1] + "%");
-
-  // Weaker embankment lets more surge through (+0.6% per point below 100%)
-  const gate = 1 + (100 - dyke) * 0.006;
-  const shield = '<svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5z" fill="#34d399"/><path d="m8.5 12 2.5 2.5 4.5-5" fill="none" stroke="#052e1b" stroke-width="2.4"/></svg>';
-  let pulses = "", routes = "", nodes = "", labels = "", risk = 0, pop = 0;
-  r.shelters.forEach(s => {
-    nodes += `<polygon points="${s[1]},${s[2]-9} ${s[1]-8},${s[2]+6} ${s[1]+8},${s[2]+6}" fill="#3b6cf0" stroke="#dbeafe" stroke-width="1.5"/>`;
-    labels += `<div class="lbl mcs" style="left:${s[1]/W*100}%;top:${s[2]/H*100}%">${shield}${s[0]}</div>`;
-  });
-  r.villages.forEach(v => {
-    const [name, x, y, p, elev, k] = v;
-    // Surge above the village's ground level, plus rain pooling everywhere
-    const depth = Math.max(0, surge * k * gate - elev) + rain * 0.018;
-    const wet = depth > 0.005, hi = depth >= 1.5, mid = wet && !hi;
-    const col = hi ? "#ea4335" : (depth >= 0.5 ? "#fbbc04" : "#34a853");
-    if (hi) risk++;
-    if (wet) pop += p / (1 + Math.exp(-(depth - 1.15) / 0.3));
-    let best = null, bd = 1e9;
-    r.shelters.forEach(s => { const d = Math.hypot(x - s[1], y - s[2]); if (d < bd) { bd = d; best = s; } });
-    const cut = depth > 2;  // route is flooded
-    if (hi || (mid && depth >= 0.5)) pulses += `<circle class="pulse" cx="${x}" cy="${y}" r="30" fill="url(#${hi ? "danger" : "warn"})"/>`;
-    routes += cut
-      ? `<line x1="${x}" y1="${y}" x2="${best[1]}" y2="${best[2]}" stroke="#ea4335" stroke-width="2" stroke-dasharray="6 4" opacity=".85"/>`
-      : `<line class="route" stroke-dashoffset="${off}" x1="${x}" y1="${y}" x2="${best[1]}" y2="${best[2]}" stroke="#34a853" stroke-width="2.5" stroke-dasharray="6 4"/>` +
-        `<circle cx="${(x+best[1])/2}" cy="${(y+best[2])/2}" r="3.5" fill="#34a853"/>`;
-    nodes += `<circle cx="${x}" cy="${y}" r="6" fill="${col}" stroke="#fff" stroke-opacity=".6" stroke-width="1.5"/>`;
-    const txt = wet ? "+" + depth.toFixed(2) + "m Flood" : "Dry (Elev: " + elev + "m)";
-    labels += `<div class="lbl vil ${wet ? (hi ? "hi" : "mid") : "dry"}" style="left:${x/W*100}%;top:${y/H*100}%"><b>${name}</b><i>${txt}</i></div>`;
-  });
-  $("pulses").innerHTML = pulses; $("routes").innerHTML = routes; $("nodes").innerHTML = nodes; $("labels").innerHTML = labels;
-
-$("risk").textContent = risk + " / " + r.villages.length;
-  $("pop").textContent = fmt(pop);
-  const e = $("emb"), wall = $("wall");
-  let st = dyke >= 60 ? ["Stable", "#34a853", ""] : dyke >= 30 ? ["Leaking", "#fbbc04", ""] : ["Breached", "#ea4335", "9 7"];
-  e.textContent = st[0]; e.style.color = st[1];
-  wall.setAttribute("stroke", st[1]);
-  wall.setAttribute("stroke-dasharray", st[2]);
-  wall.setAttribute("opacity", st[0] === "Stable" ? ".9" : ".85");
-  [["surge", 6], ["rain", 200], ["dyke", 100]].forEach(([id, max]) => $(id).style.setProperty("--p", (+$(id).value / max * 100) + "%"));
+function $(i){return document.getElementById(i)}
+var svg=$('map');
+function paint(el){
+var p=(el.value-el.min)/(el.max-el.min)*100,c=el.getAttribute('data-c');
+el.style.background='linear-gradient(to right,'+c+' '+p+'%,rgba(128,128,128,.3) '+p+'%)'}
+function run(){
+var s=+$('s').value,r=+$('r').value,e=+$('e').value,D=R[$('reg').value];
+$('sv').textContent=s.toFixed(1)+' m';$('rv').textContent=r+' mm/hr';$('ev').textContent=e+'%';
+['s','r','e'].forEach(function(i){paint($(i))});
+var f=1.25-e/100*0.9,base=D.w[0],amp=D.w[1],fr=D.w[2],ph=D.w[3];
+function wy(x){return base+amp*Math.sin(x/fr+ph)}
+var ec=e>=70?'#22a05a':e>=40?'#f59e0b':'#ef4444';
+var es=e>=70?'Stable':e>=40?'Weakened':'Breached';
+var h='';
+h+='<rect width="680" height="380" fill="#0a1633"/>';
+for(var g=0;g<680;g+=40)h+='<line x1="'+g+'" y1="0" x2="'+g+'" y2="380" stroke="#1e3a8a" stroke-opacity=".25"/>';
+for(g=0;g<380;g+=40)h+='<line x1="0" y1="'+g+'" x2="680" y2="'+g+'" stroke="#1e3a8a" stroke-opacity=".25"/>';
+var pts='',x;
+for(x=0;x<=680;x+=10)pts+=x+','+wy(x).toFixed(1)+' ';
+h+='<polygon points="'+pts+'680,380 0,380" fill="#378ADD" fill-opacity="'+(0.10+s*0.05).toFixed(2)+'"/>';
+h+='<polyline points="'+pts+'" fill="none" stroke="'+ec+'" stroke-width="4" stroke-linecap="round"'+(e<40?' stroke-dasharray="14 8"':'')+'/>';
+h+='<text x="16" y="'+(wy(60)+22).toFixed(0)+'" font-size="12" fill="#94a3b8">Coastal embankment wall</text>';
+if(r>0){for(var i=0;i<Math.round(r/5);i++){var rx=(i*137)%680,ry=(i*89)%160+70;h+='<line x1="'+rx+'" y1="'+ry+'" x2="'+(rx-4)+'" y2="'+(ry+10)+'" stroke="#7F77DD" stroke-opacity=".5" stroke-width="1.5"/>'}}
+var V=D.vl.map(function(v){
+var d=Math.max(0,(s*1.1+r*0.025)*v[4]*f-0.3);
+return{n:v[0],x:v[1],y:v[2],p:v[3],d:d,c:d>=2?'#ef4444':d>0.3?'#fbbf24':'#4ade80'}});
+V.forEach(function(v){
+if(v.d<=0.3)return;
+var t=D.sh[0],b=1e9;
+D.sh.forEach(function(q){var z=Math.hypot(v.x-q[1],v.y-q[2]);if(z<b){b=z;t=q}});
+var col=v.d>=2?'#ef4444':'#22c55e',p='M'+v.x+' '+v.y+' L'+t[1]+' '+t[2];
+h+='<path d="'+p+'" stroke="'+col+'" stroke-width="2" stroke-dasharray="6 5" fill="none"/>';
+h+='<circle r="3.5" fill="'+col+'"><animateMotion dur="'+(2+b/150).toFixed(1)+'s" repeatCount="indefinite" path="'+p+'"/></circle>'});
+V.forEach(function(v){
+var gr=18+v.d*9;
+h+='<circle cx="'+v.x+'" cy="'+v.y+'" r="'+gr.toFixed(0)+'" fill="'+v.c+'" fill-opacity=".10"><animate attributeName="r" values="'+gr.toFixed(0)+';'+(gr+12).toFixed(0)+';'+gr.toFixed(0)+'" dur="3s" repeatCount="indefinite"/></circle>';
+h+='<circle cx="'+v.x+'" cy="'+v.y+'" r="'+(gr*0.6).toFixed(0)+'" fill="'+v.c+'" fill-opacity=".16"/>';
+h+='<circle cx="'+v.x+'" cy="'+v.y+'" r="8" fill="'+v.c+'" stroke="#fff" stroke-width="2"/>'});
+D.sh.forEach(function(q){
+h+='<path d="M'+q[1]+' '+(q[2]-13)+' L'+(q[1]+13)+' '+(q[2]+9)+' L'+(q[1]-13)+' '+(q[2]+9)+' Z" fill="#2563eb" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><circle cx="'+q[1]+'" cy="'+q[2]+'" r="2.5" fill="#fff"/>'});
+function chip(cx,cy,w,l1,l2,c2,bg,bd){
+var X=Math.min(Math.max(cx-w/2,4),676-w),H=l2?38:24;
+var o='<rect x="'+X.toFixed(0)+'" y="'+cy+'" width="'+w+'" height="'+H+'" rx="4" fill="'+bg+'" stroke="'+bd+'" stroke-width="1"/>';
+o+='<text x="'+(X+w/2).toFixed(0)+'" y="'+(cy+16)+'" text-anchor="middle" font-size="12" font-weight="500" fill="#fff">'+l1+'</text>';
+if(l2)o+='<text x="'+(X+w/2).toFixed(0)+'" y="'+(cy+31)+'" text-anchor="middle" font-size="11" font-weight="500" fill="'+c2+'">'+l2+'</text>';
+return o}
+V.forEach(function(v){
+var w=Math.max(96,v.n.length*7+20);
+h+=chip(v.x,v.y+14,w,v.n,v.d>0?'+'+v.d.toFixed(2)+' m flood':'Dry',v.c,'#0f172a','#1e293b')});
+D.sh.forEach(function(q){
+var w=q[0].length*7+22;
+h+=chip(q[1],q[2]-48,w,q[0],'','','#1e3a8a','#3b82f6')});
+h+='<rect x="12" y="12" width="190" height="50" rx="6" fill="#050b1a" fill-opacity=".85"/>';
+h+='<text x="24" y="33" font-size="12" font-weight="500" fill="#fbbf24">'+D.t+'</text>';
+h+='<text x="24" y="52" font-size="12" fill="#f1f5f9">'+D.s+'</text>';
+svg.innerHTML=h;
+var hi=V.filter(function(v){return v.d>=2}),mid=V.filter(function(v){return v.d>0.3&&v.d<2});
+var pop=0;hi.forEach(function(v){pop+=v.p});mid.forEach(function(v){pop+=Math.round(v.p*0.3)});
+$('k1').textContent=hi.length+' / '+V.length;
+$('k2').textContent=pop.toLocaleString();
+var k3=$('k3');k3.textContent=es;k3.style.color=e>=70?'var(--text-success)':e>=40?'var(--text-warning)':'var(--text-danger)'
 }
+['s','r','e'].forEach(function(i){$(i).addEventListener('input',run)});
+$('reg').addEventListener('change',run);
+var paused=false;
+var PAUSE='<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
+var PLAY='<path d="M8 5l11 7-11 7z"/>';
+$('pz').addEventListener('click',function(){
+paused=!paused;
+if(paused)svg.pauseAnimations();else svg.unpauseAnimations();
+$('pzi').innerHTML=paused?PLAY:PAUSE;
+this.setAttribute('aria-label',paused?'Resume animation':'Pause animation')});
+run();
+})();
+</script>
 
-["surge", "rain", "dyke"].forEach(id => $(id).addEventListener("input", render));
-sel.addEventListener("change", render);
-$("pause").addEventListener("click", function () {
-  const p = $("app").classList.toggle("paused");
-  this.textContent = p ? "▶" : "❚❚";
-  this.setAttribute("aria-label", p ? "Resume animation" : "Pause animation");
-});
-render();
-// Flowing dashes on the green evacuation routes (drawn by script so it works regardless of CSS animation settings)
-var still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-last = 0;
-function tick(t) {
-  const dt = t - last; last = t;
-  if (!$("app").classList.contains("paused") && !still) {
-    off = (off - dt * 0.02) % 10;
-    document.querySelectorAll(".route").forEach(l => l.setAttribute("stroke-dashoffset", off));
-  }
-  requestAnimationFrame(tick);
-}
-requestAnimationFrame(tick);
+</div>
+</section>
+
+<section class="slide">
+<p class="kicker">How it works</p>
+<h2>From three inputs to an evacuation plan</h2>
+<p class="lead">The simulator turns each scenario into village-level flood depth, then routes people from flooded villages to the nearest cyclone shelter.</p>
+<div class="cards">
+<div class="card"><h3><span class="dot" style="background:#378ADD"></span>Storm surge</h3><p>Sea-level rise at landfall, up to 6 m. The main driver of how far water pushes inland.</p></div>
+<div class="card"><h3><span class="dot" style="background:#7F77DD"></span>Rainfall</h3><p>Rain intensity adds to flooding, especially in low-lying delta villages.</p></div>
+<div class="card"><h3><span class="dot" style="background:#22a05a"></span>Embankment strength</h3><p>A stronger wall reduces flood depth. Below 40% the embankment is treated as breached.</p></div>
+<div class="card"><h3><span class="dot" style="background:#ef4444"></span>Village risk</h3><p>Each village has its own lowness factor. Depth of 2 m or more counts as high risk.</p></div>
+<div class="card"><h3><span class="dot" style="background:#4ade80"></span>Evacuation routes</h3><p>Flooded villages are linked to the nearest multipurpose cyclone shelter with an animated route.</p></div>
+<div class="card"><h3><span class="dot" style="background:#fbbf24"></span>Caveat</h3><p>Depths and locations are illustrative. A real deployment needs elevation models, surveyed villages and tide gauge data.</p></div>
+</div>
+</section>
+
+</div>
+<div class="nav">
+<button id="prev">Previous</button>
+<span id="ctr">1 / 3</span>
+<button id="next">Next</button>
+</div>
+<script>
+(function(){
+var sl=document.querySelectorAll('.slide'),i=0;
+function show(n){
+i=Math.max(0,Math.min(sl.length-1,n));
+sl.forEach(function(s,k){s.classList.toggle('on',k===i)});
+document.getElementById('ctr').textContent=(i+1)+' / '+sl.length}
+document.getElementById('prev').onclick=function(){show(i-1)};
+document.getElementById('next').onclick=function(){show(i+1)};
+document.addEventListener('keydown',function(e){
+var t=e.target.tagName;
+if(t==='INPUT'||t==='SELECT')return;
+if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' ')show(i+1);
+if(e.key==='ArrowLeft'||e.key==='PageUp')show(i-1)});
+})();
 </script>
 </body>
 </html>
